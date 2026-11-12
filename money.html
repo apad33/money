@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2453FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="가계부">
+<title>가계부</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232453FF'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232453FF'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href='data:application/manifest+json,{"name":"가계부","short_name":"가계부","display":"standalone","background_color":"%23F3F5FA","theme_color":"%232453FF","start_url":"."}'>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --brand:#2453FF;--brand-soft:#EEF2FD;--brand-2:#93A8FF;
+  --bg:#F3F5FA;--card:#FFFFFF;--ink:#141821;--ink2:#3A4152;--ink3:#7A8296;--ink4:#9AA1B2;
+  --line:#EEF0F5;--line2:#DDE1EA;--red:#E2483D;--green:#16A34A;--warn-bg:#FFF1E6;--warn:#B55A12;
+  --head1:#D7E2FF;--head2:#EDF1FD;--field:#F7F8FB;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;
+}
+@media(prefers-color-scheme:dark){
+  :root{color-scheme:dark;--brand:#6C8BFF;--brand-soft:#1F2742;--brand-2:#4A5FB5;
+    --bg:#0F1218;--card:#191D26;--ink:#F1F3F8;--ink2:#C9CEDA;--ink3:#8D95A8;--ink4:#6C7386;
+    --line:#252A36;--line2:#323848;--red:#FF6B5E;--green:#3DD27A;--warn-bg:#3A2A18;--warn:#F0A860;
+    --head1:#1B2340;--head2:#141927;--field:#12151C;}
+}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;
+  background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.blue{color:var(--brand)}.red{color:var(--red)}.grn{color:var(--green)}.mut{color:var(--ink4)}
+
+/* 뼈대 */
+#app{min-height:100%}
+.side{display:none}
+main{max-width:560px;margin:0 auto;padding-bottom:150px}
+.tab{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));background:var(--card);border-radius:22px;display:flex;
+  box-shadow:0 4px 20px rgba(20,24,33,.10);padding:7px 4px;z-index:30}
+.tab button{flex:1;text-align:center;font-size:10.5px;color:var(--ink4);padding:6px 0;border-radius:14px}
+.tab button b{display:block;font-size:17px;font-weight:400;line-height:1.2}
+.tab button.on{background:var(--brand-soft);color:var(--brand);font-weight:700}
+.fab{position:fixed;right:22px;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font-size:24px;color:#fff;z-index:31}
+.fab.plus{bottom:calc(152px + env(safe-area-inset-bottom,0px));background:#141821}
+.fab.ai{bottom:calc(92px + env(safe-area-inset-bottom,0px));background:var(--brand);box-shadow:0 0 0 8px rgba(36,83,255,.14)}
+
+/* 머리 */
+.hd{background:linear-gradient(180deg,var(--head1) 0%,var(--head2) 75%,var(--bg) 100%);padding:22px 18px 14px}
+.hi{font-size:19px;font-weight:700;letter-spacing:-.03em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.hi b{color:var(--brand)}
+.sync{margin-left:auto;font-size:10.5px;font-weight:500;background:var(--card);color:var(--ink3);border-radius:20px;padding:4px 10px;letter-spacing:0}
+.sync.on{color:var(--green)}.sync.busy{color:var(--warn)}.sync.err{color:var(--red)}
+.per{font-size:12px;color:var(--ink3);margin:4px 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:11.5px;background:var(--card);border-radius:20px;padding:5px 10px;color:var(--ink2)}
+.chip b{color:var(--brand)}.chip.w{background:var(--warn-bg);color:var(--warn)}
+.pnav{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.pnav button{width:28px;height:28px;border-radius:50%;background:var(--card);color:var(--ink2)}
+
+/* 카드 */
+.in{padding:0 12px}
+.grid{display:grid;gap:10px}
+.card{background:var(--card);border-radius:18px;padding:16px}
+.h{display:flex;align-items:baseline;font-size:14px;font-weight:700;margin-bottom:8px}
+.h a,.h button{margin-left:auto;font-size:11.5px;color:var(--brand);font-weight:600}
+.lbl{font-size:12px;color:var(--ink3)}
+.big{font-size:30px;font-weight:800;letter-spacing:-.03em;margin:1px 0 9px}
+.bar{height:9px;border-radius:5px;background:var(--line2);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--brand);border-radius:5px}
+.bar i.over{background:var(--red)}
+.sub{font-size:11.5px;color:var(--ink3);margin-top:6px}
+.r{display:flex;align-items:center;width:100%;text-align:left;padding:11px 0;border-top:1px solid var(--line);font-size:13.5px;color:var(--ink2)}
+.r em{font-style:normal;font-size:10.5px;color:var(--ink4);margin-left:6px}
+.r b{margin-left:auto;font-size:15px;letter-spacing:-.02em;color:var(--ink)}
+.r b.blue{color:var(--brand)}.r b.red{color:var(--red)}.r b.mut{color:var(--ink4);font-weight:600;font-size:13px}
+.r.tot{border-top:1px solid var(--line2)}
+.bot{background:linear-gradient(135deg,#2453FF,#5B7CFF);color:#fff}
+.bot .t{font-size:11.5px;opacity:.85}
+.bot p{font-size:14px;line-height:1.55;margin-top:7px;font-weight:500}
+.ev{display:flex;align-items:center;width:100%;text-align:left;padding:10px 0;border-top:1px solid var(--line)}
+.ev:first-of-type{border-top:none}
+.ev .nm{font-size:13.5px;font-weight:600}
+.ev .dt{font-size:11px;color:var(--ink4);margin-top:1px}
+.ev .amt{margin-left:auto;font-size:14px;font-weight:600;white-space:nowrap}
+.tag{font-size:10px;background:var(--line);color:var(--ink3);border-radius:5px;padding:1px 6px;margin-left:6px;font-weight:500;white-space:nowrap}
+.mask{letter-spacing:2px;color:var(--ink4)}
+.dot{width:8px;height:8px;border-radius:50%;margin-right:9px;flex:none;display:inline-block}
+.empty{text-align:center;color:var(--ink4);font-size:13px;padding:22px 8px}
+.m4{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mc{background:var(--card);border-radius:15px;padding:12px;text-align:left}
+.mc .k{font-size:11.5px;color:var(--ink2);font-weight:600}
+.mc .v{font-size:16px;font-weight:800;margin-top:3px;letter-spacing:-.02em}
+
+/* 달력 */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;row-gap:4px}
+.cal .w{font-size:10.5px;color:var(--ink4);padding-bottom:3px}
+.cal button{font-size:12px;font-weight:600;min-height:44px;border-radius:10px;padding:4px 0;color:var(--ink)}
+.cal button small{display:block;font-size:9.5px;font-weight:600;line-height:1.3}
+.cal button.out{color:var(--line2)}
+.cal button.su{color:var(--red)}.cal button.sa{color:var(--brand)}
+.cal button.today{box-shadow:inset 0 0 0 1.5px var(--brand)}
+.cal button.sel{background:var(--ink);color:var(--card)}
+.cal button.sel small{color:var(--card)}
+.pl{display:inline-block;font-size:9px;background:var(--brand-soft);color:var(--brand);border-radius:4px;padding:0 4px}
+.sumrow{font-size:11.5px;margin:0 0 10px;display:flex;flex-wrap:wrap;gap:10px}
+.day{font-size:11.5px;color:var(--ink3);font-weight:700;padding:12px 0 2px}
+.tx{display:flex;align-items:center;width:100%;text-align:left;padding:10px 0;border-top:1px solid var(--line)}
+.tx .ic{width:34px;height:34px;border-radius:11px;background:var(--brand-soft);display:grid;place-items:center;font-size:12px;font-weight:700;color:var(--brand);margin-right:10px;flex:none}
+.tx .nm{font-size:13.5px;font-weight:600}
+.tx .ds{font-size:11px;color:var(--ink4)}
+.tx .amt{margin-left:auto;font-weight:700;font-size:14px;white-space:nowrap}
+.hbar{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12.5px}
+.hbar .n{width:86px;flex:none;color:var(--ink2)}
+.hbar .b{flex:1;height:10px;background:var(--line);border-radius:5px;overflow:hidden}
+.hbar .b i{display:block;height:100%;background:var(--brand);border-radius:5px}
+.hbar .a{width:84px;text-align:right;font-weight:700;flex:none}
+
+/* 입력 시트 */
+.veil{display:none;position:fixed;inset:0;background:rgba(15,18,24,.5);z-index:60;align-items:flex-end;justify-content:center}
+.sheet{background:var(--card);border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom,0px));width:100%;max-width:520px;max-height:90vh;overflow-y:auto}
+.sheet h3{font-size:17px;font-weight:700;margin-bottom:14px}
+.seg{display:flex;background:var(--field);border-radius:12px;padding:3px;margin-bottom:14px}
+.seg button{flex:1;padding:8px 0;border-radius:10px;font-size:13px;font-weight:600;color:var(--ink3)}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 4px rgba(20,24,33,.10)}
+.f{display:flex;flex-direction:column;gap:5px;margin-bottom:13px}
+.f label{font-size:12px;color:var(--ink3);font-weight:600}
+.f input,.f select,.f textarea{padding:12px 13px;border:1px solid var(--line2);border-radius:12px;background:var(--field);font-size:15px;width:100%}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--brand)}
+.f input.amt{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cats{display:flex;flex-wrap:wrap;gap:6px}
+.cats button{padding:7px 12px;border-radius:20px;background:var(--field);border:1px solid var(--line2);font-size:12.5px;color:var(--ink2)}
+.cats button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:700}
+.chk{display:flex;gap:9px;align-items:center;font-size:13.5px;margin-bottom:13px}
+.chk input{width:18px;height:18px;accent-color:var(--brand)}
+.acts{display:flex;gap:8px;margin-top:6px}
+.go{flex:1;background:var(--ink);color:var(--card);border-radius:13px;padding:14px;font-size:15px;font-weight:700}
+.ghost{background:var(--field);border:1px solid var(--line2);border-radius:13px;padding:14px 16px;font-size:14px;color:var(--ink2)}
+.ghost.del{color:var(--red)}
+.hint{font-size:11.5px;color:var(--ink4);line-height:1.5}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(96px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--card);
+  font-size:13px;padding:10px 18px;border-radius:22px;z-index:90;opacity:0;transition:opacity .2s;pointer-events:none;max-width:88%;text-align:center}
+.toast.on{opacity:1}
+
+/* PC */
+@media(min-width:920px){
+  #app{display:grid;grid-template-columns:200px 1fr}
+  .side{display:flex;flex-direction:column;gap:4px;background:var(--card);border-right:1px solid var(--line);padding:22px 12px;position:sticky;top:0;height:100vh}
+  .side .logo{font-weight:800;font-size:16px;color:var(--brand);padding:0 10px 16px}
+  .side button.it{text-align:left;padding:10px 12px;border-radius:11px;color:var(--ink3);font-size:14px}
+  .side button.it.on{background:var(--brand-soft);color:var(--brand);font-weight:700}
+  .side .new{margin-top:14px;background:var(--ink);color:var(--card);border-radius:12px;padding:12px;font-weight:700}
+  .side .ask{margin-top:auto;background:var(--brand);color:#fff;border-radius:12px;padding:12px;font-weight:700}
+  .tab,.fab{display:none}
+  main{max-width:1120px;margin:0;padding:0 14px 40px}
+  .hd{border-radius:0 0 20px 20px;padding:26px 22px 16px}
+  .in{padding:0 4px}
+  .grid.pc2{grid-template-columns:1.25fr 1fr;align-items:start}
+  .grid.pc3{grid-template-columns:repeat(3,1fr);align-items:start}
+  .m4{grid-template-columns:repeat(4,1fr)}
+  .veil{align-items:center}
+  .sheet{border-radius:22px}
+  .cal button{min-height:58px}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <aside class="side">
+    <div class="logo">내 가계부</div>
+    <button class="it" data-v="home" onclick="M.go('home')">⌂ 홈</button>
+    <button class="it" data-v="list" onclick="M.go('list')">≡ 내역</button>
+    <button class="it" data-v="report" onclick="M.go('report')">▥ 보고서</button>
+    <button class="it" data-v="plan" onclick="M.go('plan')">◎ 설계</button>
+    <button class="it" data-v="set" onclick="M.go('set')">⚙ 설정</button>
+    <button class="new" onclick="M.txForm()">+ 기록 추가</button>
+    <button class="ask" onclick="M.ask()">✱ 비서 한마디</button>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<nav class="tab">
+  <button data-v="home" onclick="M.go('home')"><b>⌂</b>홈</button>
+  <button data-v="list" onclick="M.go('list')"><b>≡</b>내역</button>
+  <button data-v="report" onclick="M.go('report')"><b>▥</b>보고서</button>
+  <button data-v="plan" onclick="M.go('plan')"><b>◎</b>설계</button>
+  <button data-v="set" onclick="M.go('set')"><b>⚙</b>설정</button>
+</nav>
+<button class="fab plus" onclick="M.txForm()" aria-label="기록 추가">+</button>
+<button class="fab ai" onclick="M.ask()" aria-label="비서 한마디">✱</button>
+
+<div class="veil" id="veil"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+/* ───────── 상태 ───────── */
+const LS='money-v1', LSQ='money-queue', LSU='money-url', LSK='money-key';
+const DEF_CFG={name:'',payday:25,budget:0,
+  cats:['식비','카페·간식','교통','쇼핑','생활·마트','문화·여가','건강·미용','경조사·선물','고정비','기타'],
+  icats:['월급','상여·수당','용돈·기타']};
+const DEF_ACC=[
+  {id:1,name:'월급통장',role:'월급',start:0,color:'#6A7184',order:1,hidden:false},
+  {id:2,name:'생활비 통장',role:'생활비',start:0,color:'#141821',order:2,hidden:false},
+  {id:3,name:'고정비 통장',role:'고정비',start:0,color:'#9AA6BD',order:3,hidden:false},
+  {id:4,name:'모으는 통장',role:'모으는',start:0,color:'#2453FF',order:4,hidden:false},
+  {id:5,name:'비상금',role:'비상금',start:0,color:'#93A8FF',order:5,hidden:false},
+  {id:6,name:'모임통장',role:'모임',start:0,color:'#F59E0B',order:6,hidden:false}];
+const ROLES=['월급','생활비','고정비','모으는','비상금','모임'];
+const WD=['일','월','화','수','목','금','토'];
+
+let S={tx:[],acc:DEF_ACC.slice(),rec:[],goal:[],cfg:Object.assign({},DEF_CFG)};
+let Q=[];                       // 시트로 아직 못 보낸 변경
+let API=localStorage.getItem(LSU)||'', KEYV=localStorage.getItem(LSK)||'';
+let ui={view:'home',off:0,reveal:false,day:null,sync:'',syncText:''};
+let D=null;                     // 입력 중인 초안
+let sending=false, idSeq=0;
+
+/* ───────── 도우미 ───────── */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const won=n=>Math.round(n||0).toLocaleString('ko-KR');
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const pd=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2]);};
+const today=()=>ymd(new Date());
+const md=s=>Number(s.slice(5,7))+'/'+Number(s.slice(8));
+const dim=(y,m)=>new Date(y,m+1,0).getDate();
+const daysBetween=(a,b)=>Math.round((pd(b)-pd(a))/86400000);
+const num=v=>parseInt(String(v||'').replace(/[^\d-]/g,''),10)||0;
+const newId=()=>Date.now()*10+(idSeq++%10);
+function short(n){const a=Math.abs(n);
+  if(a>=10000){const v=(a/10000);return (v>=100?Math.round(v):v.toFixed(1).replace('.0',''))+'만';}
+  if(a>=1000)return Math.round(a/1000)+'천';return String(a);}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1800);}
+
+/* 가계 기간: 시작일(월급일) 기준 한 달 */
+function periodAt(off){
+  const P=Math.min(Math.max(Number(S.cfg.payday)||1,1),28), n=new Date();
+  let y=n.getFullYear(), m=n.getMonth(); if(n.getDate()<P)m--;
+  m+=off;
+  const s=new Date(y,m,P), e=new Date(y,m+1,P); e.setDate(e.getDate()-1);
+  return {s:ymd(s),e:ymd(e),label:(s.getMonth()+1)+'월'};
+}
+const inRange=(d,p)=>d>=p.s&&d<=p.e;
+
+/* ───────── 저장 ───────── */
+function cache(){try{localStorage.setItem(LS,JSON.stringify(S));localStorage.setItem(LSQ,JSON.stringify(Q));}catch(e){}}
+function setSync(state,text){ui.sync=state;ui.syncText=text;const b=$('syncb');if(b){b.className='sync '+state;b.textContent=text;}}
+function op(o){Q.push(o);cache();flush();}
+async function call(params){
+  const q=Object.keys(params).map(k=>k+'='+encodeURIComponent(params[k])).join('&');
+  const ctrl=new AbortController(), timer=setTimeout(()=>ctrl.abort(),20000);
+  try{
+    const res=await fetch(API+'?k='+encodeURIComponent(KEYV)+'&'+q,{method:'GET',signal:ctrl.signal});
+    const d=await res.json();
+    if(d&&d.error)throw new Error(d.error);
+    return d;
+  }finally{clearTimeout(timer);}
+}
+async function flush(){
+  if(!API){setSync('', '이 기기에만 저장');return true;}
+  if(sending)return false;
+  sending=true;
+  try{
+    while(Q.length){
+      setSync('busy','저장 중… '+Q.length);
+      const o=Q[0];
+      if(o.a==='up')await call({action:'up',t:o.t,d:JSON.stringify(o.d)});
+      else if(o.a==='del')await call({action:'del',t:o.t,id:o.id});
+      else if(o.a==='set')await call({action:'set',d:JSON.stringify(o.d)});
+      Q.shift();cache();
+    }
+    setSync('on','시트에 저장됨');return true;
+  }catch(e){setSync('err','저장 실패 · 눌러서 재시도');return false;}
+  finally{sending=false;}
+}
+async function pull(){
+  if(!API)return;
+  if(Q.length){const ok=await flush();if(!ok)return;}   // 못 보낸 게 있으면 먼저 보낸다
+  setSync('busy','불러오는 중…');
+  try{
+    const d=await call({action:'load'});
+    S.tx=d.tx||[];S.rec=d.rec||[];S.goal=d.goal||[];
+    if(d.acc&&d.acc.length)S.acc=d.acc;
+    if(d.cfg){S.cfg=Object.assign({},DEF_CFG,d.cfg);
+      if(!S.cfg.cats.length)S.cfg.cats=DEF_CFG.cats.slice();
+      if(!S.cfg.icats.length)S.cfg.icats=DEF_CFG.icats.slice();}
+    cache();setSync('on','시트와 연결됨');
+    runRecurring();render();
+  }catch(e){setSync('err','연결 실패 · 눌러서 재시도');}
+}
+function boot(){
+  try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d){S=Object.assign(S,d);S.cfg=Object.assign({},DEF_CFG,d.cfg||{});}
+      Q=JSON.parse(localStorage.getItem(LSQ)||'[]');}catch(e){}
+  runRecurring();render();
+  if(API)pull();else setSync('','이 기기에만 저장');
+}
+
+/* ───────── 계산 ───────── */
+const accs=()=>S.acc.slice().sort((a,b)=>(a.order||0)-(b.order||0));
+const accBy=role=>accs().filter(a=>a.role===role);
+function balance(name,upto){
+  const a=S.acc.find(x=>x.name===name);let v=a?Number(a.start)||0:0;
+  S.tx.forEach(t=>{if(upto&&t.date>upto)return;
+    if(t.to===name)v+=Number(t.amount)||0;
+    if(t.from===name)v-=Number(t.amount)||0;});
+  return v;
+}
+function stat(p){
+  const o={income:0,expense:0,fixed:0,byDay:{},byCat:{},list:[]};
+  S.tx.forEach(t=>{if(!inRange(t.date,p))return;o.list.push(t);
+    const a=Number(t.amount)||0;
+    if(t.type==='수입'){o.income+=a;(o.byDay[t.date]=o.byDay[t.date]||{i:0,e:0}).i+=a;}
+    else if(t.type==='지출'){o.expense+=a;if(t.rid)o.fixed+=a;
+      (o.byDay[t.date]=o.byDay[t.date]||{i:0,e:0}).e+=a;
+      o.byCat[t.cat||'기타']=(o.byCat[t.cat||'기타']||0)+a;}
+  });
+  o.variable=o.expense-o.fixed;return o;
+}
+function variableUntil(p,upto){let v=0;S.tx.forEach(t=>{if(t.type==='지출'&&!t.rid&&t.date>=p.s&&t.date<=upto)v+=Number(t.amount)||0;});return v;}
+function dueIn(rec,y,m){return ymd(new Date(y,m,Math.min(Number(rec.day)||1,dim(y,m))));}
+function nextDue(rec){const n=new Date();let d=dueIn(rec,n.getFullYear(),n.getMonth());
+  if(d<today())d=dueIn(rec,n.getFullYear(),n.getMonth()+1);return d;}
+function goalSaved(g){return S.tx.filter(t=>t.gid===g.id).reduce((s,t)=>s+(Number(t.amount)||0),0);}
+function goalWeeks(g,n){const out=[],td=pd(today());
+  for(let i=n-1;i>=0;i--){const e=new Date(td);e.setDate(e.getDate()-i*7);const s=new Date(e);s.setDate(s.getDate()-6);
+    const a=ymd(s),b=ymd(e);out.push(S.tx.some(t=>t.gid===g.id&&t.date>=a&&t.date<=b));}
+  return out;}
+const liveGoals=()=>S.goal.filter(g=>!g.done);
+function isSecret(t){if(!t.rid)return false;const r=S.rec.find(x=>x.id===t.rid);return !!(r&&r.secret);}
+
+/* 정기지출을 그날이 되면 자동으로 기록 */
+function runRecurring(){
+  const td=today(); let made=0;
+  S.rec.forEach(r=>{
+    if(!r.active||!r.since)return;
+    const st=pd(r.since), n=new Date();
+    for(let i=0;i<13;i++){
+      const y=n.getFullYear(), m=n.getMonth()-i, d=dueIn(r,y,m);
+      if(new Date(y,m+1,0)<st)break;
+      if(d<r.since||d>td)continue;
+      if(S.tx.some(t=>t.rid===r.id&&t.date===d))continue;
+      const t={id:newId(),date:d,type:r.type||'지출',amount:Number(r.amount)||0,cat:r.cat||'고정비',memo:r.name,
+        from:r.from||'',to:r.to||'',rid:r.id,note:''};
+      S.tx.push(t);Q.push({a:'up',t:'tx',d:t});made++;
+    }
+  });
+  if(made){cache();flush();}
+}
+
+/* 비서 한마디: 기록을 보고 고른 한 문장들 */
+function insights(){
+  const p=periodAt(0), st=stat(p), td=today(), out=[];
+  const total=daysBetween(p.s,p.e)+1, passed=daysBetween(p.s,td)+1, left=total-passed+1;
+  const budget=Number(S.cfg.budget)||0, remain=budget-st.variable;
+  const manual=S.tx.filter(t=>!t.rid).map(t=>t.date).sort().pop();
+  if(!S.tx.length)out.push('아직 기록이 없어요. 오늘 쓴 것 하나만 적어 보세요. 거기서부터 시작이에요.');
+  if(!budget)out.push('설정에서 월 생활비 예산을 정하면, 오늘 얼마까지 써도 되는지 알려드릴게요.');
+  if(manual){const gap=daysBetween(manual,td);
+    if(gap>=5)out.push(`기록이 ${gap}일째 비어 있어요. 카드내역을 한 번 정리해 볼까요? 몰아서 해도 괜찮아요.`);}
+  if(budget&&st.variable>0){
+    const pace=budget*passed/total;
+    if(remain<0)out.push(`이번 달 생활비를 ${won(-remain)}원 넘겼어요. 남은 ${left}일은 꼭 필요한 것만 써 봐요.`);
+    else if(st.variable>pace*1.12){const perDay=st.variable/passed, runOut=Math.floor(budget/perDay);
+      out.push(`지금 속도면 ${runOut}일째쯤 생활비가 바닥나요. 남은 ${left}일은 하루 ${won(remain/left)}원 안쪽이면 맞출 수 있어요.`);}
+    else out.push(`좋은 속도예요. 남은 ${left}일 동안 하루 ${won(remain/left)}원씩 쓸 수 있어요.`);
+  }
+  // 이번 주와 지난주 분류 비교
+  const w0=ymd(new Date(Date.now()-6*86400000)), w1s=ymd(new Date(Date.now()-13*86400000)), w1e=ymd(new Date(Date.now()-7*86400000));
+  const a={},b={};
+  S.tx.forEach(t=>{if(t.type!=='지출'||t.rid)return;const v=Number(t.amount)||0,c=t.cat||'기타';
+    if(t.date>=w0&&t.date<=td)a[c]=(a[c]||0)+v;else if(t.date>=w1s&&t.date<=w1e)b[c]=(b[c]||0)+v;});
+  let top=null;Object.keys(a).forEach(c=>{const diff=a[c]-(b[c]||0);if(diff>=10000&&(!top||diff>top.diff))top={c,diff};});
+  if(top)out.push(`최근 일주일 ${top.c}가 그 전 주보다 ${won(top.diff)}원 늘었어요.`);
+  const up=upcoming(7).filter(x=>x.type==='지출');
+  if(up.length)out.push(`일주일 안에 나갈 고정비가 ${up.length}건 있어요. 통장 잔액을 한 번 확인해 두세요.`);
+  if(!out.length)out.push('특별히 짚을 건 없어요. 이대로만 가면 돼요.');
+  return out;
+}
+function upcoming(days){
+  const td=today(), lim=ymd(new Date(Date.now()+days*86400000));
+  return S.rec.filter(r=>r.active).map(r=>Object.assign({due:nextDue(r)},r)).filter(r=>r.due<=lim)
+    .sort((a,b)=>a.due.localeCompare(b.due)).map(r=>Object.assign(r,{dday:daysBetween(td,r.due)}));
+}
+
+/* ───────── 화면 조각 ───────── */
+const syncBadge=()=>`<button class="sync ${ui.sync}" id="syncb" onclick="M.retry()">${esc(ui.syncText||'')}</button>`;
+function maskName(r){return r.secret&&!ui.reveal?'<span class="mask">●●●</span>':esc(r.name);}
+function maskAmt(r,txt){return r.secret&&!ui.reveal?'<span class="mask">●●●</span>':txt;}
+function flowSvg(){
+  const pts=[];for(let i=11;i>=0;i--){const st=stat(periodAt(-i));pts.push([st.income,st.expense]);}
+  const mx=Math.max(1,...pts.map(p=>Math.max(p[0],p[1]))), W=300,H=74;
+  const line=k=>pts.map((p,i)=>(i*(W/11)).toFixed(1)+','+(H-6-(p[k]/mx)*(H-14)).toFixed(1)).join(' ');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" role="img" aria-label="최근 12개월 수입과 지출">
+    <polyline points="${line(0)}" fill="none" stroke="var(--brand)" stroke-width="2.2" stroke-linejoin="round"/>
+    <polyline points="${line(1)}" fill="none" stroke="var(--red)" stroke-width="2.2" stroke-linejoin="round"/></svg>`;
+}
+function txRow(t){
+  const sec=isSecret(t)&&!ui.reveal;
+  const sign=t.type==='수입'?'+':t.type==='지출'?'-':'';
+  const cls=t.type==='수입'?'blue':t.type==='지출'?'':'mut';
+  const name=sec?'<span class="mask">●●●</span>':esc(t.memo||t.cat||t.type);
+  const desc=t.type==='이동'?`${esc(t.from)} → ${esc(t.to)}`:(sec?'정기 납부':esc(t.cat||'')+(t.from||t.to?' · '+esc(t.from||t.to):''));
+  return `<button class="tx" onclick="M.txForm(${t.id})">
+    <span class="ic">${t.gid?'🔥':t.type==='이동'?'⇄':esc((t.cat||t.type).slice(0,2))}</span>
+    <span><span class="nm">${name}${t.rid?'<span class="tag">정기</span>':''}${t.gid?'<span class="tag">목표</span>':''}</span><br><span class="ds">${desc}</span></span>
+    <span class="amt ${cls}">${sec?'<span class="mask">●●●</span>':sign+won(t.amount)}</span></button>`;
+}
+
+/* ───────── 홈 ───────── */
+function vHome(){
+  const p=periodAt(0), st=stat(p), td=today();
+  const total=daysBetween(p.s,p.e)+1, left=daysBetween(td,p.e)+1, passed=total-left+1;
+  const budget=Number(S.cfg.budget)||0, remain=budget-st.variable, pct=budget?Math.min(100,Math.round(st.variable/budget*100)):0;
+  const prev=periodAt(-1), prevUpto=ymd(new Date(pd(prev.s).getTime()+(passed-1)*86400000));
+  const diff=variableUntil(prev,prevUpto)-st.variable;
+  let nospend=0;for(let i=0;i<passed;i++){const d=ymd(new Date(pd(p.s).getTime()+i*86400000));
+    if(!S.tx.some(t=>t.date===d&&t.type==='지출'&&!t.rid))nospend++;}
+  const manual=S.tx.filter(t=>!t.rid).map(t=>t.date).sort().pop(), gap=manual?daysBetween(manual,td):null;
+  const saved=accs().filter(a=>a.role==='모으는'||a.role==='비상금').reduce((s,a)=>s+balance(a.name),0);
+  const fixedPlan=S.rec.filter(r=>r.active&&r.type==='지출').reduce((s,r)=>s+(Number(r.amount)||0),0);
+  const mood=!budget?'시작해 볼까요?':remain<0?'조금 빠듯해요':(st.variable>budget*passed/total*1.12?'속도 조절이 필요해요':'괜찮아요!');
+  const up=upcoming(30).slice(0,5), tips=insights();
+  const chips=[];
+  if(S.tx.length&&diff!==0)chips.push(`<span class="chip">${diff>0?'✓':'·'} 지난 달 이맘때보다 <b>${won(Math.abs(diff))}원</b> ${diff>0?'덜':'더'} 썼어요</span>`);
+  if(S.tx.length)chips.push(`<span class="chip">✓ 무지출 <b>${nospend}일</b></span>`);
+  if(gap!==null)chips.push(gap>=5?`<span class="chip w">기록 ${gap}일째 비어 있어요</span>`:`<span class="chip">✓ 마지막 기록 <b>${gap===0?'오늘':gap+'일 전'}</b></span>`);
+
+  return `<div class="hd">
+      <div class="hi">${esc(S.cfg.name||'')}${S.cfg.name?'님, ':''}이번 달 가계는 <b>${mood}</b>${syncBadge()}</div>
+      <div class="per">${p.label} 가계 · ${md(p.s)} ~ ${md(p.e)} · ${left}일 남음</div>
+      <div class="chips">${chips.join('')}</div>
+    </div>
+    <div class="in"><div class="grid pc2">
+      <div class="grid">
+        <div class="card">
+          <div class="h">이번 달 한눈에<button onclick="M.go('plan')">통장별 보기 ›</button></div>
+          <div class="lbl">남은 생활비</div>
+          <div class="big ${remain<0?'red':''}">${budget?won(remain)+'원':'예산을 정해 주세요'}</div>
+          <div class="bar"><i class="${remain<0?'over':''}" style="width:${pct}%"></i></div>
+          <div class="sub">${budget?`생활비 ${won(budget)}원 중 ${pct}% 썼어요 · 하루 ${won(Math.max(0,remain)/left)}원`:'설정에서 월 생활비 예산을 입력하면 계산해 드려요'}</div>
+          <div style="margin-top:8px">
+            <button class="r" onclick="M.go('list')"><span>수입</span><b class="blue">${won(st.income)}원 ›</b></button>
+            <button class="r" onclick="M.go('list')"><span>지출</span><em>생활비 ${won(st.variable)}</em><b class="red">${won(st.expense)}원 ›</b></button>
+            <button class="r" onclick="M.go('plan')"><span>모은 돈</span><b>${won(saved)}원 ›</b></button>
+            <button class="r" onclick="M.reveal()"><span>고정비</span><em>${ui.reveal?'🔓':'🔒'}</em><b class="${ui.reveal?'':'mut'}">${ui.reveal?won(fixedPlan)+'원':'눌러서 보기'}</b></button>
+            <div class="r tot"><span>수입 − 지출</span><b class="${st.income-st.expense<0?'red':'blue'}">${won(st.income-st.expense)}원</b></div>
+          </div>
+          <div style="display:flex;font-size:11px;margin-top:12px"><span class="lbl">최근 12개월 흐름</span><span style="margin-left:auto"><span class="blue">— 수입</span> <span class="red">— 지출</span></span></div>
+          ${flowSvg()}
+        </div>
+      </div>
+      <div class="grid">
+        <div class="card bot"><div class="t">✱ 비서 한마디</div><p>${esc(tips[0])}</p></div>
+        <div class="card">
+          <div class="h">다가오는 돈 일정<span class="tag" style="font-weight:500">앞으로 30일</span><button onclick="M.go('plan')">정기지출 ›</button></div>
+          ${up.length?up.map(r=>`<button class="ev" onclick="M.reveal()">
+            <span><span class="nm">${maskName(r)}<span class="tag">${r.secret?'정기 납부':r.type==='수입'?'정기 수입':r.type==='이동'?'자동 이동':'고정'}</span></span>
+              <br><span class="dt">${md(r.due)} ${WD[pd(r.due).getDay()]} · ${r.dday===0?'오늘':'D-'+r.dday}</span></span>
+            <span class="amt ${r.type==='수입'?'blue':''}">${maskAmt(r,(r.type==='수입'?'+':'')+won(r.amount))}</span></button>`).join('')
+            :'<div class="empty">등록된 정기지출이 없어요.<br>설계에서 한 번만 등록하면 날짜마다 알아서 적혀요.</div>'}
+        </div>
+        <div class="card">
+          <div class="h">통장 잔액<button onclick="M.go('plan')">설계 ›</button></div>
+          ${accs().filter(a=>!a.hidden).map(a=>`<div class="ev"><span class="dot" style="background:${esc(a.color||'#9AA1B2')}"></span>
+            <span class="nm" style="font-weight:500">${esc(a.name)}</span><span class="amt">${won(balance(a.name))}</span></div>`).join('')}
+        </div>
+      </div>
+    </div></div>`;
+}
+
+/* ───────── 내역 ───────── */
+function vList(){
+  const p=periodAt(ui.off), st=stat(p), td=today();
+  const saved=accs().filter(a=>a.role==='모으는'||a.role==='비상금').reduce((s,a)=>s+balance(a.name,p.e),0);
+  const first=pd(p.s);first.setDate(first.getDate()-first.getDay());
+  const last=pd(p.e);last.setDate(last.getDate()+(6-last.getDay()));
+  const sched={};S.rec.filter(r=>r.active).forEach(r=>{[0,1].forEach(k=>{const b=pd(p.s);const d=dueIn(r,b.getFullYear(),b.getMonth()+k);
+    if(d>td&&inRange(d,p))sched[d]=(sched[d]||0)+1;});});
+  let cells='',nospend=0;
+  for(let d=new Date(first);d<=last;d.setDate(d.getDate()+1)){
+    const ds=ymd(d), inp=inRange(ds,p), v=st.byDay[ds], dw=d.getDay();
+    let s='';
+    if(inp&&ds<=td){
+      if(v&&v.i)s+=`<small class="blue">+${short(v.i)}</small>`;
+      if(v&&v.e)s+=`<small class="red">-${short(v.e)}</small>`;
+      if(!v||!v.e){s+=`<small class="grn">무지출</small>`;nospend++;}
+    }else if(inp&&sched[ds])s+=`<span class="pl">예정 ${sched[ds]}</span>`;
+    cells+=`<button class="${inp?'':'out'} ${dw===0?'su':dw===6?'sa':''} ${ds===td?'today':''} ${ds===ui.day?'sel':''}" ${inp?`onclick="M.pick('${ds}')"`:'disabled'}>${d.getDate()}${s}</button>`;
+  }
+  const list=st.list.filter(t=>!ui.day||t.date===ui.day).sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id);
+  let rows='',cur='';
+  list.forEach(t=>{if(t.date!==cur){cur=t.date;rows+=`<div class="day">${md(cur)} ${WD[pd(cur).getDay()]}요일</div>`;}rows+=txRow(t);});
+  return `<div class="hd"><div class="hi">내역${syncBadge()}
+      <span class="pnav"><button onclick="M.shift(-1)" aria-label="이전 달">‹</button>${p.label} · ${md(p.s)} ~ ${md(p.e)}<button onclick="M.shift(1)" aria-label="다음 달">›</button></span></div></div>
+    <div class="in"><div class="grid">
+      <div class="m4">
+        <div class="mc"><div class="k">지출</div><div class="v red">${won(st.expense)}</div></div>
+        <div class="mc"><div class="k">수입</div><div class="v blue">${won(st.income)}</div></div>
+        <div class="mc"><div class="k">모은 돈</div><div class="v">${won(saved)}</div></div>
+        <button class="mc" onclick="M.reveal()"><div class="k">고정비 ${ui.reveal?'🔓':'🔒'}</div><div class="v ${ui.reveal?'':'mut'}" ${ui.reveal?'':'style="font-size:13px;font-weight:600"'}>${ui.reveal?won(st.fixed):'눌러서 보기'}</div></button>
+      </div>
+      <div class="grid pc2">
+        <div class="card">
+          <div class="sumrow"><span>지출 <b class="red">${won(st.expense)}</b></span><span>수입 <b class="blue">${won(st.income)}</b></span>
+            <span class="grn">무지출 ${nospend}일</span><span class="blue">예정 ${Object.values(sched).reduce((a,b)=>a+b,0)}건</span></div>
+          <div class="cal">${WD.map(w=>`<div class="w">${w}</div>`).join('')}${cells}</div>
+        </div>
+        <div class="card">
+          <div class="h">${ui.day?md(ui.day)+' 내역':'이 기간 전체'}${ui.day?`<button onclick="M.pick(null)">전체 보기</button>`:''}</div>
+          ${rows||'<div class="empty">기록이 없어요.</div>'}
+        </div>
+      </div>
+    </div></div>`;
+}
+
+/* ───────── 보고서 ───────── */
+function vReport(){
+  const p=periodAt(ui.off), st=stat(p);
+  const cats=Object.keys(st.byCat).map(c=>[c,st.byCat[c]]).sort((a,b)=>b[1]-a[1]), mx=cats.length?cats[0][1]:1;
+  const weeks=[];let ws=p.s;
+  while(ws<=p.e){const we0=ymd(new Date(pd(ws).getTime()+6*86400000)), we=we0>p.e?p.e:we0;
+    let v=0;st.list.forEach(t=>{if(t.type==='지출'&&!t.rid&&t.date>=ws&&t.date<=we)v+=Number(t.amount)||0;});
+    weeks.push([md(ws)+'~'+md(we),v]);ws=ymd(new Date(pd(we).getTime()+86400000));}
+  const wmx=Math.max(1,...weeks.map(w=>w[1]));
+  return `<div class="hd"><div class="hi">보고서${syncBadge()}
+      <span class="pnav"><button onclick="M.shift(-1)">‹</button>${p.label} · ${md(p.s)} ~ ${md(p.e)}<button onclick="M.shift(1)">›</button></span></div></div>
+    <div class="in"><div class="grid pc2">
+      <div class="card"><div class="h">어디에 썼나</div>
+        ${cats.length?cats.map(c=>`<div class="hbar"><span class="n">${esc(c[0])}</span><span class="b"><i style="width:${Math.round(c[1]/mx*100)}%"></i></span><span class="a">${won(c[1])}</span></div>`).join(''):'<div class="empty">이 기간 지출이 없어요.</div>'}
+      </div>
+      <div class="grid">
+        <div class="card"><div class="h">주별 생활비</div>
+          ${weeks.map(w=>`<div class="hbar"><span class="n">${w[0]}</span><span class="b"><i style="width:${Math.round(w[1]/wmx*100)}%;background:var(--ink)"></i></span><span class="a">${won(w[1])}</span></div>`).join('')}
+          <div class="sub">고정비를 뺀, 직접 쓴 돈만 셌어요.</div></div>
+        <div class="card bot"><div class="t">✱ 비서 한마디</div>${insights().map(t=>`<p>${esc(t)}</p>`).join('')}</div>
+      </div>
+    </div></div>`;
+}
+
+/* ───────── 설계 ───────── */
+function vPlan(){
+  const recs=S.rec.slice().sort((a,b)=>(a.day||0)-(b.day||0));
+  return `<div class="hd"><div class="hi">✱ 내 돈 설계${syncBadge()}</div><div class="per">통장, 정기지출, 목표를 여기서 관리해요</div></div>
+    <div class="in"><div class="grid pc3">
+      <div class="card"><div class="h">통장<button onclick="M.accForm()">+ 추가</button></div>
+        ${accs().map(a=>`<button class="ev" onclick="M.accForm(${a.id})"><span class="dot" style="background:${esc(a.color||'#9AA1B2')}"></span>
+          <span><span class="nm">${esc(a.name)}<span class="tag">${esc(a.role)}</span></span></span><span class="amt">${won(balance(a.name))}</span></button>`).join('')}
+        <div class="sub">통장 사이로 옮긴 돈은 "이동"으로 적으면 지출에 잡히지 않아요.</div></div>
+      <div class="card"><div class="h">정기지출 ${ui.reveal?'🔓':'🔒'}<button onclick="M.recForm()">+ 추가</button></div>
+        ${recs.length?recs.map(r=>`<button class="ev" onclick="${r.secret&&!ui.reveal?'M.reveal()':'M.recForm('+r.id+')'}">
+          <span><span class="nm">${maskName(r)}<span class="tag">${r.type==='이동'?'자동 이동':r.type==='수입'?'정기 수입':r.secret?'정기 납부':'고정'}</span>${r.active?'':'<span class="tag">멈춤</span>'}</span>
+          <br><span class="dt">매월 ${r.day}일</span></span><span class="amt">${maskAmt(r,won(r.amount))}</span></button>`).join('')
+          :'<div class="empty">매달 나가는 돈을 한 번만 등록해 두세요.<br>그날이 되면 알아서 내역에 적혀요.</div>'}
+        <div class="sub">🔒 표시된 항목은 이름과 금액이 가려져요. 누르면 잠깐 보여요.</div></div>
+      <div class="card"><div class="h">🔥 목표 챌린지<button onclick="M.goalForm()">+ 추가</button></div>
+        ${S.goal.length?S.goal.map(g=>{const have=goalSaved(g), pct=g.target?Math.min(100,Math.round(have/g.target*100)):0;
+          const dl=g.due?daysBetween(today(),g.due):null, weeks=dl&&dl>0?Math.max(1,Math.ceil(dl/7)):0, need=Math.max(0,g.target-have);
+          const wk=goalWeeks(g,6), done=g.done||pct>=100;
+          return `<div class="ev" style="display:block">
+            <div style="display:flex;align-items:baseline"><button class="nm" onclick="M.goalForm(${g.id})" style="text-align:left">${esc(g.name)} <span class="mut" style="font-size:11px;font-weight:500">✎</span></button>
+              <span class="amt blue" style="font-size:12px">${done?'달성 🎉':(dl!==null?(dl>=0?'D-'+dl:'기한 지남'):pct+'%')}</span></div>
+            <div class="sub" style="margin:2px 0 6px">${won(have)} / ${won(g.target)}원 · ${pct}%${g.acc?' · '+esc(g.acc):''}</div>
+            <div class="bar"><i style="width:${pct}%"></i></div>
+            <div style="display:flex;gap:4px;margin-top:8px">${wk.map((on,i)=>`<span title="${i===5?'이번 주':(5-i)+'주 전'}" style="flex:1;height:18px;border-radius:5px;font-size:9px;display:grid;place-items:center;${on?'background:var(--brand);color:#fff':i===5?'border:1.5px dashed var(--brand);color:var(--brand)':'background:var(--line);color:var(--ink4)'}">${i===5?'이번 주':on?'✓':''}</span>`).join('')}</div>
+            ${!done&&need>0&&weeks?`<div class="sub blue" style="font-weight:600">매주 ${won(need/weeks)}원씩 넣으면 날짜 안에 달성해요</div>`:''}
+            ${done?'':`<button class="go" style="width:100%;margin-top:10px;padding:10px;font-size:13.5px" onclick="M.txForm(null,${g.id})">+ 이 목표에 넣기</button>`}
+          </div>`;}).join('')
+          :'<div class="empty">모으고 싶은 목표를 하나 정해 보세요.<br>작게 시작해도 좋아요.</div>'}
+        <div class="sub">기록 추가의 🔥 목표 칸으로 넣으면 여기에 쌓여요.</div>
+      </div>
+    </div></div>`;
+}
+
+/* ───────── 설정 ───────── */
+function vSet(){
+  const c=S.cfg;
+  return `<div class="hd"><div class="hi">설정${syncBadge()}</div></div>
+    <div class="in"><div class="grid pc2">
+      <div class="card"><div class="h">기본</div>
+        <div class="f"><label>이름</label><input id="s-name" value="${esc(c.name)}" placeholder="홈 화면 인사에 쓰여요"></div>
+        <div class="two">
+          <div class="f"><label>가계 시작일 (월급일)</label><input id="s-pay" type="number" min="1" max="28" value="${Number(c.payday)||1}"></div>
+          <div class="f"><label>월 생활비 예산</label><input id="s-bud" inputmode="numeric" value="${c.budget?won(c.budget):''}" placeholder="0" oninput="M.comma(this)"></div>
+        </div>
+        <div class="hint" style="margin-bottom:13px">생활비 예산은 고정비를 뺀, 한 달 동안 자유롭게 쓸 돈이에요.</div>
+        <div class="f"><label>지출 분류 (쉼표로 구분)</label><textarea id="s-cats" rows="2">${esc(c.cats.join(', '))}</textarea></div>
+        <div class="f"><label>수입 분류 (쉼표로 구분)</label><textarea id="s-icats" rows="1">${esc(c.icats.join(', '))}</textarea></div>
+        <div class="acts"><button class="go" onclick="M.saveSet()">저장</button></div>
+      </div>
+      <div class="card"><div class="h">시트 연결</div>
+        <div class="f"><label>웹 앱 주소</label><input id="s-url" value="${esc(API)}" placeholder="https://script.google.com/macros/s/.../exec"></div>
+        <div class="f"><label>비밀키</label><input id="s-key" type="password" value="${esc(KEYV)}" placeholder="스크립트의 KEY 와 같은 값"></div>
+        <div class="acts"><button class="go" onclick="M.saveLink()">연결하고 불러오기</button><button class="ghost" onclick="M.unlink()">끊기</button></div>
+        <div class="hint" style="margin-top:12px">연결하면 기록이 구글시트에 쌓여요. 연결 전에 이 기기에 적어 둔 내용은 연결 후 시트 내용으로 바뀌니, 처음엔 연결부터 해 주세요.<br><br>휴대폰에서는 브라우저 메뉴의 "홈 화면에 추가"를 누르면 앱처럼 쓸 수 있어요.</div>
+      </div>
+    </div></div>`;
+}
+
+/* ───────── 그리기 ───────── */
+function render(){
+  const v=ui.view;
+  $('view').innerHTML=v==='home'?vHome():v==='list'?vList():v==='report'?vReport():v==='plan'?vPlan():vSet();
+  document.querySelectorAll('[data-v]').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+}
+function openSheet(html){$('sheet').innerHTML=html;$('veil').style.display='flex';}
+function closeSheet(){$('veil').style.display='none';D=null;}
+const accOpts=(sel,blank)=>(blank?`<option value="">${blank}</option>`:'')+accs().map(a=>`<option ${a.name===sel?'selected':''}>${esc(a.name)}</option>`).join('');
+
+/* ───────── 기록 입력 ───────── */
+function drawTx(){
+  const t=D, cats=t.type==='수입'?S.cfg.icats:S.cfg.cats, goals=liveGoals();
+  const g=S.goal.find(x=>x.id===t.gid);
+  let body='';
+  if(t.type==='목표'){
+    body=goals.length||g?`
+    <div class="f"><label>어떤 목표에</label><div class="cats">${(g&&g.done?[g]:[]).concat(goals).map(x=>`<button class="${t.gid===x.id?'on':''}" onclick="M.d('gid',${x.id},1)">🔥 ${esc(x.name)}</button>`).join('')}</div></div>
+    <div class="f"><label>금액</label><input class="amt" inputmode="numeric" placeholder="0" value="${t.amount?won(t.amount):''}" oninput="M.comma(this);M.d('amount',this.value)"></div>
+    <div class="two">
+      <div class="f"><label>어디서 가져왔나요</label><select onchange="M.d('from',this.value)">${accOpts(t.from)}</select></div>
+      <div class="f"><label>모으는 통장</label><select onchange="M.d('to',this.value)">${accOpts(t.to)}</select></div>
+    </div>
+    <div class="f"><label>날짜</label><input type="date" value="${t.date}" onchange="M.d('date',this.value)"></div>
+    <div class="hint" style="margin-bottom:13px">${t.from&&t.from===t.to?'같은 통장을 고르면 이미 통장에 있던 돈을 이 목표 몫으로 표시만 해요. 잔액은 그대로예요.':'통장 사이 이동으로 기록되어 지출에는 잡히지 않아요.'}</div>`
+    :`<div class="empty">아직 목표가 없어요.<br>설계 → 목표 챌린지에서 먼저 만들어 주세요.</div>`;
+  }else{
+    body=`
+    <div class="f"><label>금액</label><input class="amt" inputmode="numeric" placeholder="0" value="${t.amount?won(t.amount):''}" oninput="M.comma(this);M.d('amount',this.value)"></div>
+    ${t.type!=='이동'?`<div class="f"><label>분류</label><div class="cats">${cats.map(c=>`<button class="${t.cat===c?'on':''}" onclick="M.d('cat','${esc(c)}',1)">${esc(c)}</button>`).join('')}</div></div>`:''}
+    <div class="f"><label>${t.type==='이동'?'메모':'내용'}</label><input value="${esc(t.memo)}" placeholder="${t.type==='이동'?'예: 이번 달 저축':'예: 점심, 마트'}" oninput="M.d('memo',this.value)"></div>
+    <div class="two">
+      <div class="f"><label>날짜</label><input type="date" value="${t.date}" onchange="M.d('date',this.value)"></div>
+      ${t.type==='지출'?`<div class="f"><label>나간 통장</label><select onchange="M.d('from',this.value)">${accOpts(t.from)}</select></div>`
+       :t.type==='수입'?`<div class="f"><label>들어온 통장</label><select onchange="M.d('to',this.value)">${accOpts(t.to)}</select></div>`
+       :`<div class="f"><label>보낸 통장</label><select onchange="M.d('from',this.value)">${accOpts(t.from)}</select></div>`}
+    </div>
+    ${t.type==='이동'?`<div class="f"><label>받은 통장</label><select onchange="M.d('to',this.value)">${accOpts(t.to)}</select></div>`:''}`;
+  }
+  openSheet(`<h3>${t._new?'기록 추가':'기록 수정'}</h3>
+    <div class="seg">${['지출','수입','이동','목표'].map(k=>`<button class="${t.type===k?'on':''}" onclick="M.d('type','${k}',1)">${k==='목표'?'🔥 목표':k}</button>`).join('')}</div>
+    ${body}
+    <div class="acts">${t.type==='목표'&&!(goals.length||g)?'':`<button class="go" onclick="M.saveTx()">저장</button>`}
+      ${t._new?'':`<button class="ghost del" onclick="M.delTx()">삭제</button>`}<button class="ghost" onclick="M.close()">닫기</button></div>`);
+}
+function txForm(id,gid){
+  const live=accBy('생활비')[0]||accs()[0], pay=accBy('월급')[0]||accs()[0];
+  if(id){const t=S.tx.find(x=>x.id===id);if(!t)return;D=Object.assign({},t);
+    if(D.gid&&D.type==='이동')D.type='목표';}
+  else{D={_new:true,id:newId(),date:ui.day||today(),type:'지출',amount:0,cat:S.cfg.cats[0]||'기타',memo:'',
+          from:live?live.name:'',to:'',rid:'',gid:'',note:''};
+    if(gid){D.type='목표';D.cat='';D.from=pay?pay.name:'';pickGoal(gid);}}
+  drawTx();
+}
+function pickGoal(gid){
+  const g=S.goal.find(x=>x.id===gid);if(!g)return;
+  D.gid=g.id;
+  const save=accBy('모으는')[0]||accs()[0];
+  D.to=g.acc||(save?save.name:'');
+}
+function setD(k,v,redraw){
+  if(!D)return;
+  if(k==='amount')v=num(v);
+  if(k==='type'&&D._kind==='tx'){}
+  D[k]=v;
+  if(k==='type'&&D.cat!==undefined&&D.since===undefined){     // 기록 입력에서 구분을 바꿀 때 기본값 맞추기
+    const live=accBy('생활비')[0]||accs()[0], pay=accBy('월급')[0]||accs()[0], save=accBy('모으는')[0]||accs()[0];
+    if(v==='지출'){D.cat=S.cfg.cats[0]||'기타';D.from=D.from||(live?live.name:'');D.to='';}
+    if(v==='수입'){D.cat=S.cfg.icats[0]||'월급';D.to=D.to||(pay?pay.name:'');D.from='';}
+    if(v==='이동'){D.cat='';D.from=D.from||(pay?pay.name:'');D.to=D.to&&D.to!==D.from?D.to:(save?save.name:'');}
+    if(v==='목표'){D.cat='';D.from=pay?pay.name:D.from;const gs=liveGoals();if(!S.goal.some(x=>x.id===D.gid)&&gs.length)pickGoal(gs[0].id);}
+    if(v!=='목표')D.gid='';
+  }
+  if(k==='gid'&&D.cat!==undefined&&D.since===undefined&&v)pickGoal(v);
+  if(redraw){if(D.since!==undefined)drawRec();else drawTx();}
+}
+function saveTx(){
+  const t=D;
+  if(!(t.amount>0)){toast('금액을 입력해 주세요');return;}
+  if(t.type==='목표'&&!S.goal.some(x=>x.id===t.gid)){toast('목표를 골라 주세요');return;}
+  if((t.type==='이동'||t.type==='목표')&&(!t.from||!t.to)){toast('통장을 골라 주세요');return;}
+  if(t.type==='이동'&&!t.gid&&t.from===t.to){toast('보낸 통장과 받은 통장을 다르게 골라 주세요');return;}
+  if(t.type==='목표'){const g=S.goal.find(x=>x.id===t.gid);t.memo=t.memo||(g.name+' 모으기');t.type='이동';}
+  const row={id:t.id,date:t.date||today(),type:t.type,amount:t.amount,cat:t.type==='이동'?'':t.cat,memo:t.memo||'',
+    from:t.type==='수입'?'':t.from||'',to:t.type==='지출'?'':t.to||'',rid:t.rid||'',note:t.note||'',gid:t.type==='이동'&&t.gid?t.gid:''};
+  const i=S.tx.findIndex(x=>x.id===row.id);
+  if(i>=0)S.tx[i]=row;else S.tx.push(row);
+  op({a:'up',t:'tx',d:row});closeSheet();render();toast(row.gid?'목표에 넣었어요 🔥':'저장했어요');
+}
+function delTx(){
+  if(!confirm('이 기록을 지울까요?'))return;
+  const id=D.id;S.tx=S.tx.filter(x=>x.id!==id);op({a:'del',t:'tx',id});closeSheet();render();toast('지웠어요');
+}
+
+/* ───────── 통장 ───────── */
+function accForm(id){
+  const a=id?Object.assign({},S.acc.find(x=>x.id===id)):{_new:true,id:newId(),name:'',role:'생활비',start:0,color:'#2453FF',order:S.acc.length+1,hidden:false};
+  D=a;D._old=a.name;
+  openSheet(`<h3>${a._new?'통장 추가':'통장 수정'}</h3>
+    <div class="f"><label>이름</label><input id="a-name" value="${esc(a.name)}" placeholder="예: 카카오 생활비"></div>
+    <div class="two">
+      <div class="f"><label>용도</label><select id="a-role">${ROLES.map(r=>`<option ${a.role===r?'selected':''}>${r}</option>`).join('')}</select></div>
+      <div class="f"><label>색</label><input id="a-color" type="color" value="${esc(a.color||'#2453FF')}" style="height:48px;padding:6px"></div>
+    </div>
+    <div class="f"><label>시작 잔액</label><input id="a-start" inputmode="numeric" value="${a.start?won(a.start):''}" placeholder="가계부를 시작하는 날의 잔액" oninput="M.comma(this)"></div>
+    <label class="chk"><input type="checkbox" id="a-hide" ${a.hidden?'checked':''}> 홈 화면에서 숨기기</label>
+    <div class="acts"><button class="go" onclick="M.saveAcc()">저장</button>
+      ${a._new?'':`<button class="ghost del" onclick="M.delAcc()">삭제</button>`}<button class="ghost" onclick="M.close()">닫기</button></div>`);
+}
+function saveAcc(){
+  const name=$('a-name').value.trim();
+  if(!name){toast('이름을 입력해 주세요');return;}
+  if(S.acc.some(x=>x.name===name&&x.id!==D.id)){toast('같은 이름의 통장이 있어요');return;}
+  const row={id:D.id,name,role:$('a-role').value,start:num($('a-start').value),color:$('a-color').value,order:D.order||S.acc.length+1,hidden:$('a-hide').checked};
+  const i=S.acc.findIndex(x=>x.id===row.id);
+  if(i>=0)S.acc[i]=row;else S.acc.push(row);
+  Q.push({a:'up',t:'acc',d:row});
+  const old=D._old;
+  if(old&&old!==name){                          // 이름을 바꾸면 지난 기록도 같이 바꾼다
+    S.tx.forEach(t=>{let ch=false;if(t.from===old){t.from=name;ch=true;}if(t.to===old){t.to=name;ch=true;}if(ch)Q.push({a:'up',t:'tx',d:t});});
+    S.rec.forEach(r=>{let ch=false;if(r.from===old){r.from=name;ch=true;}if(r.to===old){r.to=name;ch=true;}if(ch)Q.push({a:'up',t:'rec',d:r});});
+    S.goal.forEach(g=>{if(g.acc===old){g.acc=name;Q.push({a:'up',t:'goal',d:g});}});
+  }
+  cache();flush();closeSheet();render();toast('저장했어요');
+}
+function delAcc(){
+  const n=D._old;
+  if(S.tx.some(t=>t.from===n||t.to===n)||S.rec.some(r=>r.from===n||r.to===n)){toast('이 통장을 쓰는 기록이 있어 지울 수 없어요. 숨기기를 써 보세요.');return;}
+  if(!confirm(`"${n}" 통장을 지울까요?`))return;
+  S.acc=S.acc.filter(x=>x.id!==D.id);op({a:'del',t:'acc',id:D.id});closeSheet();render();
+}
+
+/* ───────── 정기지출 ───────── */
+function drawRec(){
+  const r=D;
+  openSheet(`<h3>${r._new?'정기지출 추가':'정기지출 수정'}</h3>
+    <div class="seg">${['지출','수입','이동'].map(k=>`<button class="${r.type===k?'on':''}" onclick="M.d('type','${k}',1)">${k}</button>`).join('')}</div>
+    <div class="f"><label>이름</label><input value="${esc(r.name)}" placeholder="예: 휴대폰 요금" oninput="M.d('name',this.value)"></div>
+    <div class="two">
+      <div class="f"><label>금액</label><input inputmode="numeric" value="${r.amount?won(r.amount):''}" placeholder="0" oninput="M.comma(this);M.d('amount',this.value)"></div>
+      <div class="f"><label>매월 며칠</label><input type="number" min="1" max="31" value="${r.day}" oninput="M.d('day',Number(this.value)||1)"></div>
+    </div>
+    ${r.type!=='수입'?`<div class="f"><label>${r.type==='이동'?'보내는 통장':'나가는 통장'}</label><select onchange="M.d('from',this.value)">${accOpts(r.from,'선택 안 함')}</select></div>`:''}
+    ${r.type!=='지출'?`<div class="f"><label>${r.type==='이동'?'받는 통장':'들어오는 통장'}</label><select onchange="M.d('to',this.value)">${accOpts(r.to,'선택 안 함')}</select></div>`:''}
+    <label class="chk"><input type="checkbox" ${r.secret?'checked':''} onchange="M.d('secret',this.checked)"> 🔒 비공개 — 화면에서 이름과 금액 가리기</label>
+    <label class="chk"><input type="checkbox" ${r.active?'checked':''} onchange="M.d('active',this.checked)"> 사용 중 — 날짜가 되면 자동으로 기록</label>
+    <div class="f"><label>메모 (선택)</label><input value="${esc(r.note)}" placeholder="나만 보는 메모" oninput="M.d('note',this.value)"></div>
+    <div class="acts"><button class="go" onclick="M.saveRec()">저장</button>
+      ${r._new?'':`<button class="ghost del" onclick="M.delRec()">삭제</button>`}<button class="ghost" onclick="M.close()">닫기</button></div>`);
+}
+function recForm(id){
+  const fix=accBy('고정비')[0]||accs()[0];
+  D=id?Object.assign({},S.rec.find(x=>x.id===id)):{_new:true,id:newId(),active:true,name:'',amount:0,type:'지출',cat:'고정비',day:new Date().getDate(),
+    from:fix?fix.name:'',to:'',secret:false,since:today(),note:''};
+  drawRec();
+}
+function saveRec(){
+  const r=D;
+  if(!r.name.trim()){toast('이름을 입력해 주세요');return;}
+  if(!(r.amount>0)){toast('금액을 입력해 주세요');return;}
+  const row={id:r.id,active:!!r.active,name:r.name.trim(),amount:r.amount,type:r.type,cat:r.type==='지출'?'고정비':r.type==='수입'?(S.cfg.icats[0]||'월급'):'',
+    day:Math.min(31,Math.max(1,Number(r.day)||1)),from:r.type==='수입'?'':r.from||'',to:r.type==='지출'?'':r.to||'',secret:!!r.secret,since:r.since||today(),note:r.note||''};
+  const i=S.rec.findIndex(x=>x.id===row.id);
+  if(i>=0)S.rec[i]=row;else S.rec.push(row);
+  op({a:'up',t:'rec',d:row});closeSheet();runRecurring();render();toast('저장했어요');
+}
+function delRec(){
+  if(!confirm('이 정기지출을 지울까요? 이미 기록된 내역은 그대로 남아요.'))return;
+  S.rec=S.rec.filter(x=>x.id!==D.id);op({a:'del',t:'rec',id:D.id});closeSheet();render();
+}
+
+/* ───────── 목표 ───────── */
+function goalForm(id){
+  const sv=accBy('모으는')[0]||accs()[0];
+  const g=id?Object.assign({},S.goal.find(x=>x.id===id)):{_new:true,id:newId(),name:'',target:0,due:'',acc:sv?sv.name:'',done:false};
+  D=g;
+  openSheet(`<h3>${g._new?'목표 추가':'목표 수정'}</h3>
+    <div class="f"><label>목표 이름</label><input id="g-name" value="${esc(g.name)}" placeholder="예: 제주도 여행"></div>
+    <div class="two">
+      <div class="f"><label>목표 금액</label><input id="g-target" inputmode="numeric" value="${g.target?won(g.target):''}" placeholder="0" oninput="M.comma(this)"></div>
+      <div class="f"><label>목표일 (선택)</label><input id="g-due" type="date" value="${esc(g.due||'')}"></div>
+    </div>
+    <div class="f"><label>모으는 통장</label><select id="g-acc">${accOpts(g.acc)}</select></div>
+    <div class="hint" style="margin-bottom:13px">목표에 넣을 때 기본으로 고를 통장이에요. 진행률은 이 목표로 넣은 기록만 더해서 계산해요.</div>
+    <div class="acts"><button class="go" onclick="M.saveGoal()">저장</button>
+      ${g._new?'':`<button class="ghost del" onclick="M.delGoal()">삭제</button>`}<button class="ghost" onclick="M.close()">닫기</button></div>`);
+}
+function saveGoal(){
+  const name=$('g-name').value.trim(), target=num($('g-target').value);
+  if(!name||!(target>0)){toast('이름과 목표 금액을 입력해 주세요');return;}
+  const row={id:D.id,name,target,due:$('g-due').value||'',acc:$('g-acc').value,done:!!D.done};
+  const i=S.goal.findIndex(x=>x.id===row.id);
+  if(i>=0)S.goal[i]=row;else S.goal.push(row);
+  op({a:'up',t:'goal',d:row});closeSheet();render();toast('저장했어요');
+}
+function delGoal(){
+  if(!confirm('이 목표를 지울까요? 이 목표로 넣은 기록은 일반 이동으로 남아요.'))return;
+  S.tx.forEach(t=>{if(t.gid===D.id){t.gid='';Q.push({a:'up',t:'tx',d:t});}});
+  S.goal=S.goal.filter(x=>x.id!==D.id);op({a:'del',t:'goal',id:D.id});closeSheet();render();
+}
+
+/* ───────── 설정·연결 ───────── */
+function saveSet(){
+  const list=id=>$(id).value.split(',').map(s=>s.trim()).filter(Boolean);
+  S.cfg={name:$('s-name').value.trim(),payday:Math.min(28,Math.max(1,num($('s-pay').value)||1)),budget:num($('s-bud').value),
+    cats:list('s-cats').length?list('s-cats'):DEF_CFG.cats.slice(),icats:list('s-icats').length?list('s-icats'):DEF_CFG.icats.slice()};
+  op({a:'set',d:S.cfg});render();toast('저장했어요');
+}
+function saveLink(){
+  const u=$('s-url').value.trim(), k=$('s-key').value.trim();
+  if(!/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(u)){toast('/exec 로 끝나는 웹 앱 주소를 넣어 주세요');return;}
+  if(!k){toast('비밀키를 입력해 주세요');return;}
+  API=u;KEYV=k;localStorage.setItem(LSU,u);localStorage.setItem(LSK,k);
+  Q=[];cache();pull();
+}
+function unlink(){API='';KEYV='';localStorage.removeItem(LSU);localStorage.removeItem(LSK);setSync('','이 기기에만 저장');render();}
+
+/* ───────── 바깥으로 여는 손잡이 ───────── */
+window.M={
+  go:v=>{ui.view=v;ui.day=null;if(v==='home')ui.off=0;render();window.scrollTo(0,0);},
+  shift:n=>{ui.off+=n;ui.day=null;render();},
+  pick:d=>{ui.day=ui.day===d?null:d;render();},
+  reveal:()=>{ui.reveal=!ui.reveal;render();},
+  retry:()=>{if(!API){M.go('set');return;}if(Q.length)flush();else pull();},
+  ask:()=>openSheet(`<h3>✱ 비서 한마디</h3>${insights().map(t=>`<div class="card" style="background:var(--field);margin-bottom:8px;padding:13px"><p style="font-size:14px;line-height:1.6">${esc(t)}</p></div>`).join('')}
+    <div class="hint" style="margin:10px 0 14px">더 자세한 분석은 Claude 대화에서 "가계부 봐줘"라고 하면 시트를 직접 읽고 답해 드려요.</div>
+    <div class="acts"><button class="go" onclick="M.close()">확인</button></div>`),
+  comma:el=>{const n=num(el.value);el.value=n?won(n):'';},
+  d:setD, close:closeSheet,
+  txForm, saveTx, delTx, accForm, saveAcc, delAcc, recForm, saveRec, delRec, goalForm, saveGoal, delGoal,
+  saveSet, saveLink, unlink
+};
+$('veil').addEventListener('click',e=>{if(e.target===$('veil'))closeSheet();});
+window.addEventListener('beforeunload',e=>{if(API&&Q.length){e.preventDefault();e.returnValue='';}});
+boot();
+})();
+</script>
+</body>
+</html>
