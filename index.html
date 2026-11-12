@@ -9,8 +9,8 @@
 <meta name="apple-mobile-web-app-title" content="가계부">
 <title>가계부</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='24' fill='%232453FF'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%232453FF'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='700'%3E%E2%82%A9%3C/text%3E%3C/svg%3E">
-<link rel="manifest" href='data:application/manifest+json,{"name":"가계부","short_name":"가계부","display":"standalone","background_color":"%23F3F5FA","theme_color":"%232453FF","start_url":"."}'>
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -837,6 +837,7 @@ window.M={
 $('veil').addEventListener('click',e=>{if(e.target===$('veil'))closeSheet();});
 window.addEventListener('beforeunload',e=>{if(API&&Q.length){e.preventDefault();e.returnValue='';}});
 boot();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 })();
 </script>
 </body>
